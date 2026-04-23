@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Track Leaderboard</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap');
+
+    :root {
+      --red: #d62828;
+      --dark: #1a1a1a;
+      --mid: #2e2e2e;
+      --light: #f0ece4;
+      --muted: #888;
+      --accent: #f7b731;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--dark);
+      color: var(--light);
+      min-height: 100vh;
+      padding: 24px 20px;
+    }
+
+    h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 2.6rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--light);
+      border-left: 5px solid var(--red);
+      padding-left: 14px;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    h3 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin: 18px 0 6px;
+    }
+
+    /* EVENTS LIST */
+    .event-link {
+      display: block;
+      padding: 12px 16px;
+      margin: 6px 0;
+      background: var(--mid);
+      border-left: 4px solid transparent;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .event-link:hover { border-color: var(--red); background: #3a3a3a; }
+
+    /* TABLE */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 14px;
+    }
+    th {
+      background: var(--red);
+      color: #fff;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 10px 12px;
+    }
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #3a3a3a;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+    tr:nth-child(even) td { background: #252525; }
+    tr:nth-child(odd) td { background: var(--mid); }
+    td:first-child {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--accent);
+      width: 60px;
+    }
+
+    /* BUTTONS */
+    button {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 8px 18px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    button:hover { opacity: 0.85; }
+
+    .btn-primary { background: var(--red); color: #fff; }
+    .btn-secondary { background: #444; color: var(--light); }
+    .btn-back {
+      background: none;
+      color: var(--muted);
+      border: 1px solid #444;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+    }
+    .btn-back:hover { color: var(--light); border-color: var(--light); opacity: 1; }
+
+    /* LOGIN */
+    #loginBox {
+      margin-top: 40px;
+      padding: 16px;
+      background: var(--mid);
+      display: inline-block;
+      border-top: 3px solid var(--red);
+    }
+
+    /* ADMIN */
+    #adminPanel {
+      display: none;
+      background: var(--mid);
+      padding: 20px;
+      margin-top: 30px;
+      border-top: 3px solid var(--accent);
+    }
+
+    input, select {
+      background: #111;
+      color: var(--light);
+      border: 1px solid #444;
+      padding: 8px 10px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.95rem;
+      margin: 4px 4px 4px 0;
+    }
+    input::placeholder { color: #666; }
+    input:focus, select:focus { outline: 1px solid var(--red); border-color: var(--red); }
+
+    select option { background: #222; }
+
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 4px; }
+
+    p { color: var(--muted); font-style: italic; margin: 8px 0; }
+
+    /* COMBOBOX */
+    .combobox {
+      position: relative;
+      display: inline-block;
+    }
+    .combobox input {
+      width: 200px;
+    }
+    .combobox-list {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 100;
+      background: #1a1a1a;
+      border: 1px solid var(--red);
+      width: 200px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+    .combobox-list.open { display: block; }
+    .combobox-option {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.95rem;
+      color: var(--light);
+    }
+    .combobox-option:hover, .combobox-option.active {
+      background: var(--red);
+      color: #fff;
+    }
+
+    /* NO-SEED CHECKBOX */
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0;
+    }
+    .check-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--red);
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+    }
+    .check-row label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.95rem;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+    input:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🏃 Track Leaderboard</h1>
+
+<div id="mainView"></div>
+
+<!-- LOGIN -->
+<div id="loginBox">
+  <h3>Admin Login</h3>
+  <div class="row">
+    <input id="adminPassword" type="password" placeholder="Password">
+    <button class="btn-primary" id="loginBtn">Login</button>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminPanel">
+  <h2>Admin Panel</h2>
+  <button class="btn-secondary" id="logoutBtn">Logout</button>
+
+  <h3>Create Event</h3>
+  <div class="row">
+    <input id="eventName" placeholder="Event name">
+    <button class="btn-primary" id="createEventBtn">Add Event</button>
+  </div>
+
+  <h3>Add Athlete</h3>
+  <div class="row">
+    <select id="eventSelect"></select>
+    <input id="athleteName" placeholder="Athlete name">
+    <input id="seedTime" placeholder="Seed time (1:02.345)">
+    <button class="btn-primary" id="addAthleteBtn">Add Athlete</button>
+  </div>
+  <div class="check-row">
+    <input type="checkbox" id="noSeedCheck">
+    <label for="noSeedCheck">No seed time (unseeded)</label>
+  </div>
+
+  <h3>Update Result</h3>
+  <div class="row">
+    <select id="resultEvent"></select>
+    <div class="combobox">
+      <input id="resultName" placeholder="Athlete name" autocomplete="off">
+      <div class="combobox-list" id="athleteDropdown"></div>
+    </div>
+    <input id="finalTime" placeholder="Final time (1:02.345)">
+    <button class="btn-primary" id="updateResultBtn">Update</button>
+  </div>
+</div>
+
+<script>
+  // ================= STORAGE =================
+  let data = [];
+  try {
+    const saved = localStorage.getItem("trackData");
+    if (saved) data = JSON.parse(saved);
+  } catch { data = []; }
+
+  function saveData() {
+    try { localStorage.setItem("trackData", JSON.stringify(data)); } catch {}
+  }
+
+  // ================= STATE =================
+  let currentEvent = null;
+
+  // ================= TIME =================
+  function parseTime(t) {
+    if (!t) return NaN;
+    if (!t.includes(":")) return parseFloat(t);
+    const [m, s] = t.split(":");
+    return parseInt(m) * 60 + parseFloat(s);
+  }
+
+  function formatTime(s) {
+    if (s == null || isNaN(s)) return "—";
+    const m = Math.floor(s / 60);
+    const sec = (s % 60).toFixed(3);
+    return `${m}:${sec.padStart(6, "0")}`;
+  }
+
+  // ================= ACTIONS =================
+  function createEvent() {
+    const name = document.getElementById("eventName").value.trim();
+    if (!name) return alert("Enter an event name");
+    data.push({ name, athletes: [] });
+    document.getElementById("eventName").value = "";
+    saveData();
+    render();
+  }
+
+  function addAthlete() {
+    const i = parseInt(document.getElementById("eventSelect").value);
+    const name = document.getElementById("athleteName").value.trim();
+    const noSeed = document.getElementById("noSeedCheck").checked;
+    const seedVal = document.getElementById("seedTime").value.trim();
+    const seed = noSeed ? null : parseTime(seedVal);
+
+    if (!name) return alert("Enter an athlete name");
+    if (!noSeed && isNaN(seed)) return alert("Enter a valid seed time, or check 'No seed time'");
+    if (data[i].athletes.find(a => a.name.toLowerCase() === name.toLowerCase()))
+      return alert("An athlete with that name already exists in this event");
+
+    data[i].athletes.push({ name, seed, final: null });
+    document.getElementById("athleteName").value = "";
+    document.getElementById("seedTime").value = "";
+    document.getElementById("noSeedCheck").checked = false;
+    document.getElementById("seedTime").disabled = false;
+    saveData();
+    render();
+  }
+
+  function updateResult() {
+    const i = parseInt(document.getElementById("resultEvent").value);
+    const name = document.getElementById("resultName").value.trim();
+    const final = parseTime(document.getElementById("finalTime").value.trim());
+    const athlete = data[i]?.athletes.find(a => a.name.toLowerCase() === name.toLowerCase());
+    if (!athlete) return alert("Select a valid athlete from the dropdown");
+    if (isNaN(final)) return alert("Enter a valid time");
+    athlete.final = final;
+    document.getElementById("resultName").value = "";
+    document.getElementById("finalTime").value = "";
+    document.getElementById("athleteDropdown").classList.remove("open");
+    saveData();
+    render();
+  }
+
+  // ================= COMBOBOX =================
+  function buildCombobox() {
+    const input = document.getElementById("resultName");
+    const list = document.getElementById("athleteDropdown");
+    const eventSel = document.getElementById("resultEvent");
+
+    function getAthletes() {
+      const i = parseInt(eventSel.value);
+      return (isNaN(i) || !data[i]) ? [] : data[i].athletes.map(a => a.name);
+    }
+
+    function showList(names) {
+      list.innerHTML = "";
+      if (names.length === 0) { list.classList.remove("open"); return; }
+      names.forEach(name => {
+        const div = document.createElement("div");
+        div.className = "combobox-option";
+        div.textContent = name;
+        div.onmousedown = (e) => {
+          e.preventDefault(); // don't blur the input first
+          input.value = name;
+          list.classList.remove("open");
+        };
+        list.appendChild(div);
+      });
+      list.classList.add("open");
+    }
+
+    input.addEventListener("focus", () => {
+      const q = input.value.toLowerCase();
+      const names = getAthletes().filter(n => n.toLowerCase().includes(q));
+      showList(names);
+    });
+
+    input.addEventListener("input", () => {
+      const q = input.value.toLowerCase();
+      const names = getAthletes().filter(n => n.toLowerCase().includes(q));
+      showList(names);
+    });
+
+    input.addEventListener("blur", () => {
+      setTimeout(() => list.classList.remove("open"), 150);
+    });
+
+    // Re-filter when event changes
+    eventSel.addEventListener("change", () => {
+      input.value = "";
+      list.classList.remove("open");
+    });
+
+    // Keyboard nav
+    input.addEventListener("keydown", (e) => {
+      const opts = list.querySelectorAll(".combobox-option");
+      const active = list.querySelector(".combobox-option.active");
+      let idx = [...opts].indexOf(active);
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (idx < opts.length - 1) { active?.classList.remove("active"); opts[idx + 1].classList.add("active"); }
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (idx > 0) { active?.classList.remove("active"); opts[idx - 1].classList.add("active"); }
+      } else if (e.key === "Enter" && active) {
+        input.value = active.textContent;
+        list.classList.remove("open");
+      } else if (e.key === "Escape") {
+        list.classList.remove("open");
+      }
+    });
+  }
+
+  function login() {
+    if (document.getElementById("adminPassword").value === "track123") {
+      document.getElementById("adminPanel").style.display = "block";
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("adminPassword").value = "";
+    } else {
+      alert("Wrong password");
+    }
+  }
+
+  function logout() {
+    document.getElementById("adminPanel").style.display = "none";
+    document.getElementById("loginBox").style.display = "block";
+  }
+
+  // ================= RENDER =================
+  function render() {
+    const main = document.getElementById("mainView");
+
+    // --- HOME ---
+    if (currentEvent === null) {
+      let html = "<h2>Events</h2>";
+      if (data.length === 0) {
+        html += "<p>No events yet — add one in the admin panel.</p>";
+      }
+      main.innerHTML = html;
+
+      data.forEach((e, i) => {
+        const div = document.createElement("div");
+        div.textContent = e.name;
+        div.className = "event-link";
+        div.onclick = () => { currentEvent = i; render(); };
+        main.appendChild(div);
+      });
+
+    // --- EVENT VIEW ---
+    } else {
+      const event = data[currentEvent];
+      if (!event) { currentEvent = null; render(); return; }
+
+      // Build everything as DOM nodes — no mixed innerHTML/appendChild
+      main.innerHTML = "";
+
+      const back = document.createElement("button");
+      back.textContent = "⬅ Back to Events";
+      back.className = "btn-back";
+      back.onclick = () => { currentEvent = null; render(); };
+      main.appendChild(back);
+
+      const title = document.createElement("h2");
+      title.textContent = event.name;
+      main.appendChild(title);
+
+      if (event.athletes.length === 0) {
+        const p = document.createElement("p");
+        p.textContent = "No athletes added yet.";
+        main.appendChild(p);
+      } else {
+        // Sort by seed time; null seeds go to bottom
+        const seeded = [...event.athletes].sort((a, b) => {
+          if (a.seed == null && b.seed == null) return 0;
+          if (a.seed == null) return 1;
+          if (b.seed == null) return -1;
+          return a.seed - b.seed;
+        });
+        seeded.forEach((a, i) => a.seedRank = i + 1);
+
+        const sorted = [...seeded].sort((a, b) => {
+          if (a.final == null && b.final == null) return 0;
+          if (a.final == null) return 1;
+          if (b.final == null) return -1;
+          return a.final - b.final;
+        });
+
+        const table = document.createElement("table");
+        table.innerHTML = `
+          <thead>
+            <tr><th>Place</th><th>Name</th><th>Seed</th><th>Final</th></tr>
+          </thead>
+        `;
+        const tbody = document.createElement("tbody");
+        let place = 1;
+        sorted.forEach(a => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${a.final != null ? place++ : "—"}</td>
+            <td>${a.name}</td>
+            <td>${formatTime(a.seed)}</td>
+            <td>${formatTime(a.final)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        main.appendChild(table);
+      }
+    }
+
+    // Update dropdowns (preserve current selection)
+    ["eventSelect", "resultEvent"].forEach(id => {
+      const sel = document.getElementById(id);
+      const prev = sel.value;
+      sel.innerHTML = data.map((e, i) => `<option value="${i}">${e.name}</option>`).join("");
+      if (prev !== "" && data[parseInt(prev)]) sel.value = prev;
+    });
+  }
+
+  // ================= WIRE UP BUTTONS =================
+  document.getElementById("loginBtn").onclick = login;
+  document.getElementById("logoutBtn").onclick = logout;
+  document.getElementById("createEventBtn").onclick = createEvent;
+  document.getElementById("addAthleteBtn").onclick = addAthlete;
+  document.getElementById("updateResultBtn").onclick = updateResult;
+
+  document.getElementById("adminPassword").addEventListener("keydown", e => {
+    if (e.key === "Enter") login();
+  });
+
+  document.getElementById("noSeedCheck").addEventListener("change", function() {
+    const seedInput = document.getElementById("seedTime");
+    seedInput.disabled = this.checked;
+    if (this.checked) seedInput.value = "";
+  });
+
+  buildCombobox();
+  render();
+</script>
+
+</body>
+</html>
